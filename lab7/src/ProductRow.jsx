@@ -7,9 +7,11 @@
 // clicking the favorite button should ONLY re-render the changed row,
 // not all of them.
 
+import React from "react";
+
 function ProductRow({ product, onToggleFavorite }) {
     console.log("Row render:", product.name);
-  
+
     return (
       <tr>
         <td>{product.name}</td>
@@ -23,6 +25,6 @@ function ProductRow({ product, onToggleFavorite }) {
       </tr>
     );
   }
-  
-  export default ProductRow;
+
+  export default React.memo(ProductRow);
   

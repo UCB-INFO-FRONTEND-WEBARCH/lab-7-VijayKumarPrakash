@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { products as initialProducts } from "./data";
 import ProductTable from "./ProductTable";
 
@@ -18,29 +18,33 @@ function ProductDashboard() {
   // - filterText
   // - category
   // change.
-  console.log("Filtering products...");
-  const filteredProducts = items
-    .filter((p) =>
-      p.name.toLowerCase().includes(filterText.toLowerCase())
-    )
-    .filter((p) =>
-      category === "all" ? true : p.category === category
-    );
+  const filteredProducts = useMemo(() => {
+    console.log("Filtering products...");
+    return items
+      .filter((p) =>
+        p.name.toLowerCase().includes(filterText.toLowerCase())
+      )
+      .filter((p) =>
+        category === "all" ? true : p.category === category
+      );
+  }, [items, filterText, category]);
 
   // TODO 2:
   // The total price calculation is also heavy and runs on **every render**.
   // Use `useMemo` so this expensive reduce operation only runs when
   // filteredProducts changes.
-  
-  console.log("Computing total price...");
-  const totalPrice = filteredProducts.reduce((sum, p) => {
-    // Artificial heavy computation
-    let fake = 0;
-    for (let i = 0; i < 5000; i++) {
-      fake += Math.sqrt(p.price) * Math.random();
-    }
-    return sum + p.price;
-  }, 0);
+
+  const totalPrice = useMemo(() => {
+    console.log("Computing total price...");
+    return filteredProducts.reduce((sum, p) => {
+      // Artificial heavy computation
+      let fake = 0;
+      for (let i = 0; i < 5000; i++) {
+        fake += Math.sqrt(p.price) * Math.random();
+      }
+      return sum + p.price;
+    }, 0);
+  }, [filteredProducts]);
 
   // TODO 3:
   // Inline event handler creates a new function **every time the component renders**.
@@ -56,7 +60,15 @@ function ProductDashboard() {
   //
   // Then in JSX:
   // <ProductTable onToggleFavorite={handleToggleFavorite} />
-  
+
+  const handleToggleFavorite = useCallback((id) => {
+    setItems((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, favorite: !p.favorite } : p
+      )
+    );
+  }, []);
+
   return (
     <div style={{ padding: "20px" }}>
       <h1>Product Dashboard</h1>
@@ -102,13 +114,7 @@ function ProductDashboard() {
         products={filteredProducts}
         // TODO 3 (continued):
         // Replace this inline handler with the memoized one you create.
-        onToggleFavorite={(id) =>
-          setItems((prev) =>
-            prev.map((p) =>
-              p.id === id ? { ...p, favorite: !p.favorite } : p
-            )
-          )
-        }
+        onToggleFavorite={handleToggleFavorite}
       />
     </div>
   );
