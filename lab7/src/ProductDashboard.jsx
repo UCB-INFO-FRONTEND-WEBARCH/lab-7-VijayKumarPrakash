@@ -10,14 +10,8 @@ function ProductDashboard() {
 
   console.log("Dashboard render");
 
-  // TODO 1:
-  // The filtering below runs **every time the component renders**.
-  // This is an expensive computation when data grows larger.
-  // Wrap this logic with `useMemo` so it only recomputes when:
-  // - items
-  // - filterText
-  // - category
-  // change.
+  // Memoize filtered products to avoid re-filtering on every render.
+  // Only recomputes when items, filterText, or category changes.
   const filteredProducts = useMemo(() => {
     console.log("Filtering products...");
     return items
@@ -29,15 +23,12 @@ function ProductDashboard() {
       );
   }, [items, filterText, category]);
 
-  // TODO 2:
-  // The total price calculation is also heavy and runs on **every render**.
-  // Use `useMemo` so this expensive reduce operation only runs when
-  // filteredProducts changes.
-
+  // Memoize total price calculation to avoid expensive computation on every render.
+  // Only recalculates when filteredProducts changes.
   const totalPrice = useMemo(() => {
     console.log("Computing total price...");
     return filteredProducts.reduce((sum, p) => {
-      // Artificial heavy computation
+      // Artificial heavy computation to demonstrate performance benefits
       let fake = 0;
       for (let i = 0; i < 5000; i++) {
         fake += Math.sqrt(p.price) * Math.random();
@@ -46,21 +37,8 @@ function ProductDashboard() {
     }, 0);
   }, [filteredProducts]);
 
-  // TODO 3:
-  // Inline event handler creates a new function **every time the component renders**.
-  // When we later wrap ProductRow in React.memo, this will cause
-  // ALL rows to re-render because the onToggleFavorite prop is always a new function.
-  //
-  // Fix:
-  // 1. Create a separate function above the return block.
-  // 2. Wrap it in `useCallback` so the function reference stays stable.
-  //
-  // Example:
-  // const handleToggleFavorite = useCallback((id) => { ... }, []);
-  //
-  // Then in JSX:
-  // <ProductTable onToggleFavorite={handleToggleFavorite} />
-
+  // Memoize the toggle handler to maintain stable function reference.
+  // Prevents unnecessary re-renders of ProductRow components wrapped in React.memo.
   const handleToggleFavorite = useCallback((id) => {
     setItems((prev) =>
       prev.map((p) =>
@@ -82,9 +60,7 @@ function ProductDashboard() {
       </button>
       {showHelp && (
         <p style={{ marginBottom: "16px" }}>
-          This is a help text.
-          {/* After applying useMemo, toggling this SHOULD NOT trigger
-              "Filtering products..." or "Computing total price..." logs. */}
+          This is a help text. Toggling this should not trigger filtering or price calculation logs.
         </p>
       )}
 
@@ -112,8 +88,6 @@ function ProductDashboard() {
 
       <ProductTable
         products={filteredProducts}
-        // TODO 3 (continued):
-        // Replace this inline handler with the memoized one you create.
         onToggleFavorite={handleToggleFavorite}
       />
     </div>
